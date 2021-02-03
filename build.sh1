@@ -1,0 +1,21 @@
+#!/bin/bash
+
+dir=$(pwd)
+for r in $(cat ${dir}/build.json1 | jq '.root' | column -t -s'[],"'); do
+    cd ${dir}/${r}
+    docker build --tag ${r} .   
+done
+
+for p in $(cat ${dir}/build.json1 | jq '.package' | column -t -s'[],"'); do
+    cd ${dir}/${p}
+    docker build --tag ${p} .
+#    docker tag ${p} 49.254.0.67:5000/${p}
+#    docker push 49.254.0.67:5000/${p}
+done
+
+for p in $(cat ${dir}/build.json1 | jq '.tool' | column -t -s'[],"'); do
+    cd ${dir}/${p}
+    docker build --tag ${p} .
+#    docker tag ${p} 49.254.0.67:5000/${p}
+#    docker push 49.254.0.67:5000/${p}
+done

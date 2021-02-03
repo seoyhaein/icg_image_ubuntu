@@ -1,0 +1,58 @@
+#####################Dockerfile#####################
+# Dockerfile
+# MAINTAINER mjkam, dwkim, yhkim
+# Software: gatk
+# Software Version: 3.8.1
+# Description:      
+# Website:          
+# Provides:         ubuntu16.04 java r python
+# Base Image:       icg_python_3.7.2 icg_r_3.2.5
+#####################Installation#####################
+
+FROM icg_python_3.7.2 as python_images
+
+FROM icg_r_3.2.5
+COPY --from=python_images /usr/bin/ /usr/bin
+COPY --from=python_images /usr/local/bin/ /usr/local/bin
+COPY --from=python_images /usr/local/lib/python3.7 /usr/local/lib/python3.7
+
+RUN apt-get install --yes unzip git 
+
+
+#GATK
+WORKDIR /home/centos/mnt1/tools
+RUN wget https://github.com/broadgsa/gatk/archive/3.8-1.zip
+RUN unzip 3.8-1.zip
+
+RUN apt-get install --yes software-properties-common python-software-properties
+RUN add-apt-repository ppa:git-core/ppa && apt-get update
+RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+RUN apt-get install git-lfs && git lfs install
+
+
+
+
+FROM icg_samtools_1.9 as samtools_images
+COPY --from=samtools_images /usr/local/bin/samtools /usr/local/bin
+
+FROM icg_picard_2.9.0 as picard_images
+COPY --from=picard_images /usr/local/bin/picard.jar /usr/local/bin/
+
+FROM icg_java_1.7
+
+wget https://de.cyverse.org/dl/d/6177B1E0-718A-4F95-A83B-C3B88E23C093/GenomeAnalysisTK-3.7-0.tar.bz2
+
+wget https://de.cyverse.org/dl/d/6177B1E0-718A-4F95-A83B-C3B88E23C093/GenomeAnalysisTK-3.7-0.tar.bz2
+
+RUN wget https://github.com/broadgsa/gatk-protected/archive/3.8-1.tar.gz  && \
+    tar -xvf 3.8-1.tar.gz
+    cd $DST/$FOLDER && \
+    git reset --hard $SHA && \
+    mvn verify && \
+    bash -c 'echo -e "#!/bin/bash\njava -jar '$DST/$FOLDER'/target/GenomeAnalysisTK.jar  \$@" > '$DST'/GenomeAnalysisTK' && \
+    chmod +x $DST/GenomeAnalysisTK
+
+
+
+WORKDIR /home/centos/mnt1/data
+

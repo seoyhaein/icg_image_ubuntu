@@ -1,0 +1,10 @@
+{
+  "root": [
+    "icg_base_1.0"
+  ],
+  "package": [
+    "icg_bamtools_2.4.1"
+  ],
+  "tool":[
+  ]
+}

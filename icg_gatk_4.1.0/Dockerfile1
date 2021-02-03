@@ -1,0 +1,56 @@
+#####################Dockerfile#####################
+# Dockerfile
+# MAINTAINER mjkam, dwkim, yhkim
+# Software:         R
+# Software Version: 
+# Description:      R.3.2.5
+# Website:          
+# Provides:         ubuntu16.04 build-essential wget curl python3.5
+# Base Image:       icg_python_3.7.2 icg_r_3.2.5
+#####################Installation#####################
+
+FROM icg_python_3.7.2 as python_images
+
+FROM icg_r_3.2.5
+COPY --from=python_images /usr/bin/ /usr/bin
+COPY --from=python_images /usr/local/bin/ /usr/local/bin
+COPY --from=python_images /usr/local/lib/python3.7 /usr/local/lib/python3.7
+
+RUN apt-get install --yes unzip git 
+
+#Gradle
+WORKDIR /tmp
+
+RUN wget https://services.gradle.org/distributions/gradle-4.10.2-bin.zip
+RUN unzip -d /opt/gradle /tmp/gradle-*.zip
+RUN touch /etc/profile.d/gradle.sh
+ RUN echo "export GRADLE_HOME=/opt/gradle/gradle-4.10.2" >> /etc/profile.d/gradle.sh
+RUN echo "export PATH=\${GRADLE_HOME}/bin:\${PATH}" >> /etc/profile.d/gradle.sh
+RUN chmod +x /etc/profile.d/gradle.sh
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+RUN source /etc/profile.d/gradle.sh
+RUN rm -rf gradle-4.10.2-bin.zip
+
+
+#Conda
+RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-5.3.0-Linux-x86_64.sh -O ~/anaconda.sh &&     bash ~/anaconda.sh -b -p /opt/conda &&     rm ~/anaconda.sh &&     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh &&     echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc &&     echo "conda activate base" >> ~/.bashrc
+ RUN apt-get install -y curl grep sed dpkg &&     TINI_VERSION=`curl https://github.com/krallin/tini/releases/latest | grep -o "/v.*\"" | sed 's:^..\(.*\).$:\1:'` &&     curl -L "https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini_${TINI_VERSION}.deb" > tini.deb &&     dpkg -i tini.deb &&     rm tini.deb &&     apt-get clean
+
+#GATK
+WORKDIR /home/centos/mnt1/tools
+RUN git clone https://github.com/broadinstitute/gatk.git &&
+    cd ./gatk
+
+
+RUN apt-get install --yes software-properties-common python-software-properties
+RUN add-apt-repository ppa:git-core/ppa
+RUN apt-get update
+RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+RUN apt-get install git-lfs
+RUN git lfs install
+RUN ./gradlew installAll
+RUN rm -rf ./src/test* /opt/conda/
+
+
+
+
